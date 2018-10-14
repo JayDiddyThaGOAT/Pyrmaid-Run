@@ -10,24 +10,18 @@ public class ScoreManager : MonoBehaviour {
 
     public float scoreCount;
 
-    public float pointperSecond;
+    private AudioSource sound;
+    private bool highScorePassed = false;
 
-    public bool scoreIncrease = true;
+    private void Start()
+    {
+        sound = FindObjectOfType<PlayerController>().GetComponent<AudioSource>();
+    }
 
-	// Use this for initialization
-	void Start ()
+    // Update is called once per frame
+    void Update ()
     {
-      
-	}
-	
-	// Update is called once per frame
-	void Update ()
-    {
-        // if player has not hit anything, continue to increase score
-        if(scoreIncrease)
-        {
-            scoreCount += pointperSecond * Time.deltaTime;
-        }
+        scoreCount = Mathf.Clamp(FindObjectOfType<PlayerController>().transform.position.x, 0f, Mathf.Infinity);
 
         // check if current score is higher than high score
         if(scoreCount > (PlayerPrefs.GetFloat("High Score")))

@@ -6,10 +6,9 @@ using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb2d;
+    private AudioSource audi;
+    
     private bool grounded;
-    public LayerMask whatIsGround;
-    public float groundCheckRadius;
-    public Transform groundCheck;
 
     private ScoreManager theScoreManager;
 
@@ -17,19 +16,24 @@ public class PlayerController : MonoBehaviour
     public float jumpForce = 10f;
     public GameObject mainCamera;
 
-    public float cameraOffsetX;
+    private float cameraOffsetX;
 
 
     // Use this for initialization
     void Start ()
     {
         rb2d = GetComponent<Rigidbody2D>();
+        audi = GetComponent<AudioSource>();
+
         theScoreManager = FindObjectOfType<ScoreManager>();
+
+        cameraOffsetX = -transform.position.x;
 	}
 
-    private void OnDrawGizmos()
+    private void Update()
     {
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        if(transform.position.y <= Camera.main.ViewportToWorldPoint(new Vector3(0, -1f, 10)).y)
+            Die();
     }
 
     // use FixedUpdate for physics calculations
@@ -41,37 +45,55 @@ public class PlayerController : MonoBehaviour
         // constant force added to player
         rb2d.velocity = new Vector2(speed, rb2d.velocity.y);
 
-        grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround);
-        print(grounded);
         // player jump
         if (grounded)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetMouseButtonDown(0))
             {
                 rb2d.velocity = new Vector2(rb2d.velocity.x, jumpForce);
             }
         }
-
 	}
-    
-    // check if player is grounded or if player hits an obstalce
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // stop movement if player hits obstacle and restart scene
-        if(collision.gameObject.CompareTag("Obstacle"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
-            theScoreManager.scoreIncrease = false;
-            theScoreManager.scoreCount = 0;
-            rb2d.constraints = RigidbodyConstraints2D.FreezePositionX;
-            Debug.Log("Obstacle Hit");
-            Invoke("Restart", 1f);
+            if (collision.gameObject.tag == "Mummy")
+            {
+                FindObjectOfType<AudioManager>().Play("whymummies");
+                Die(2.5f);
+            }
+            else
+                Die();
         }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Platform"))
+            grounded = true;
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Platform"))
+            grounded = false;
+    }
+
+    public void Die(float delay = 1f)
+    {
+        // stop movement if player hits obstacle and restart scene
+        rb2d.constraints = RigidbodyConstraints2D.FreezePosition;
+        GetComponent<Animator>().speed = 0f;
+
+        Invoke("Restart", delay);
     }
 
     void Restart()
     {
         rb2d.constraints = RigidbodyConstraints2D.None;
-        theScoreManager.scoreIncrease = true;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 

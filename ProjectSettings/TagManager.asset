@@ -8,6 +8,9 @@ TagManager:
   - Boulder
   - Undefined
   - Obstacle
+  - Spikes
+  - Mummy
+  - Ceiling
   layers:
   - Default
   - TransparentFX
@@ -18,7 +21,7 @@ TagManager:
   - 
   - 
   - Platform
-  - 
+  - Obstacle
   - 
   - 
   - 
